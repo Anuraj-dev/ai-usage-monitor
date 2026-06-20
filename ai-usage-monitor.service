@@ -1,0 +1,13 @@
+[Unit]
+Description=AI Usage & Token Monitor (Claude Code / Codex / OpenCode)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/ai-usage-monitor
+ExecStart=%h/ai-usage-monitor/.venv/bin/python -m monitor.server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

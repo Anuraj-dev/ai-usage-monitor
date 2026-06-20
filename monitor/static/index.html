@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-void:#000; --bg-primary:#060607; --bg-elevated:#0b0b0d; --bg-card:#0f0f12; --bg-hover:#17171c;
+  --accent:#7c6cff; --accent-bright:#9d8cff; --accent-2:#c4b9ff; --accent-dim:rgba(124,108,255,.32);
+  --tp:rgba(255,255,255,.95); --ts:rgba(255,255,255,.70); --tt:rgba(255,255,255,.42);
+  --grid:rgba(255,255,255,.05); --grid-b:rgba(255,255,255,.10);
+  --success:#22c55e; --warning:#f59e0b; --danger:#ef4444;
+  --font:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg-void);color:var(--tp);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1600px;margin:0 auto;padding:1rem}
+@media(min-width:640px){.wrap{padding:1.5rem}}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.accent{color:var(--accent)}
+
+/* nav */
+.top-nav{display:flex;gap:.75rem;align-items:center;padding:.75rem 1rem;margin-bottom:1rem;
+  background:var(--bg-card);border:1px solid var(--grid-b)}
+.nav-link{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tt);
+  text-decoration:none;padding:.4rem .6rem;border:1px solid transparent;cursor:pointer;background:none}
+.nav-link:hover{color:var(--tp);border-color:var(--grid-b);background:var(--bg-hover)}
+.nav-link.active{color:var(--tp);border-color:var(--accent-dim);background:var(--bg-elevated)}
+.nav-spacer{flex:1}
+.nav-status{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tt);display:flex;gap:.5rem;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success)}
+
+/* header */
+.header{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;padding:1.25rem 1.5rem;
+  background:var(--bg-card);border:1px solid var(--grid-b);position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-dim),transparent)}
+@media(min-width:760px){.header{flex-direction:row;justify-content:space-between;align-items:center}}
+.breadcrumb{font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;color:var(--tt)}
+.title{font-size:2rem;line-height:.95;font-weight:400;margin-top:.5rem}
+.title b{font-weight:700}
+.subtitle{font-size:.75rem;color:var(--ts);margin-top:.5rem;max-width:64ch}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:.75rem}
+.clock{font-family:var(--mono);font-size:1.1rem;color:var(--accent-2)}
+.clock-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--tt)}
+.ranges{display:flex;gap:.25rem}
+.range{font-size:.62rem;letter-spacing:.08em;font-family:var(--mono);color:var(--tt);background:var(--bg-elevated);
+  border:1px solid var(--grid);padding:.3rem .55rem;cursor:pointer}
+.range:hover{color:var(--tp);border-color:var(--grid-b)}
+.range.active{color:var(--tp);border-color:var(--accent-dim);background:rgba(124,108,255,.10)}
+
+/* grids + panels */
+.grid{display:grid;gap:1rem;margin-bottom:1.5rem}
+.g5{grid-template-columns:repeat(2,1fr)} @media(min-width:980px){.g5{grid-template-columns:repeat(5,1fr)}}
+.g4{grid-template-columns:repeat(2,1fr)} @media(min-width:980px){.g4{grid-template-columns:repeat(4,1fr)}}
+.g2{grid-template-columns:1fr} @media(min-width:980px){.g2{grid-template-columns:2fr 1fr}}
+.panel{background:var(--bg-card);border:1px solid var(--grid-b);padding:1.25rem;position:relative}
+.section-title{font-size:.72rem;font-weight:500;color:var(--ts);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+.group-title{font-size:.72rem;font-weight:500;color:var(--ts);text-transform:uppercase;letter-spacing:.15em;
+  margin:0 0 1rem;padding-left:.5rem;border-left:2px solid var(--accent-dim)}
+
+/* stat cards */
+.stat{background:var(--bg-card);border:1px solid var(--grid);padding:1.2rem}
+.stat .label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tt);margin-bottom:.5rem}
+.stat .value{font-size:1.75rem;font-weight:700;line-height:1;font-family:var(--mono)}
+.stat .value.acc{color:var(--accent)}
+.stat .sub{font-size:.6rem;color:var(--tt);margin-top:.5rem}
+.stat .sub.up{color:var(--success)} .stat .sub.down{color:var(--danger)}
+.hero{border-color:var(--grid-b)}
+.hero.feat{background:linear-gradient(160deg,rgba(124,108,255,.07),transparent 60%)}
+
+/* charts */
+.chartbox{position:relative;width:100%;height:280px}
+.chartbox.sm{height:240px}
+.toggle{display:inline-flex;gap:.25rem;float:right}
+.toggle button{font-size:.6rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;
+  background:var(--bg-elevated);border:1px solid var(--grid);color:var(--tt);padding:.2rem .5rem;cursor:pointer}
+.toggle button.active{color:var(--tp);border-color:var(--accent-dim);background:rgba(124,108,255,.1)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--grid)}
+th{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tt);font-weight:500;cursor:pointer;
+  position:sticky;top:0;background:var(--bg-card)}
+td{color:var(--ts)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:var(--bg-hover)}
+.scroll{max-height:340px;overflow:auto}
+.badge{display:inline-block;border:1px solid var(--accent-dim);color:var(--ts);padding:.05rem .4rem;
+  font-size:.6rem;text-transform:uppercase;font-family:var(--mono);letter-spacing:.04em}
+
+/* lang stats */
+.lang-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1rem}
+@media(min-width:640px){.lang-grid{grid-template-columns:repeat(4,1fr)}}
+.lang-stat{text-align:center;padding:.75rem;background:var(--bg-elevated);border:1px solid var(--grid)}
+.lang-stat .v{font-size:1.25rem;font-weight:600;font-family:var(--mono)}
+.lang-stat .l{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tt);margin-top:.25rem}
+
+/* bars */
+.bars{display:flex;flex-direction:column;gap:.45rem}
+.bar-row{display:grid;grid-template-columns:130px 1fr 96px;gap:.6rem;align-items:center}
+.bar-name{font-size:.72rem;color:var(--ts);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:8px;background:var(--bg-elevated);border:1px solid var(--grid);position:relative}
+.bar-fill{height:100%;background:var(--accent)}
+.bar-stat{font-size:.66rem;color:var(--tt);font-family:var(--mono);text-align:right}
+
+/* heatmap */
+.heat{display:flex;flex-direction:column;gap:3px}
+.heat-hours{display:flex;gap:3px;margin-left:40px;margin-bottom:4px}
+.heat-hours span{flex:1;font-size:.55rem;color:var(--tt);text-align:center}
+.heat-row{display:flex;gap:3px;align-items:center}
+.heat-day{width:40px;font-size:.62rem;color:var(--tt);text-transform:uppercase}
+.heat-cell{flex:1;aspect-ratio:1;min-height:16px;border-radius:2px;background:var(--bg-elevated)}
+.heat-cell:hover{outline:1px solid var(--accent-bright)}
+
+.foot{font-size:.62rem;color:var(--tt);text-align:center;padding:1.5rem 0;font-family:var(--mono)}
+.hidden{display:none}
+.delta-up{color:var(--success)} .delta-down{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top-nav">
+    <button class="nav-link active" data-tab="dash">Overview</button>
+    <button class="nav-link" data-tab="live">Live</button>
+    <button class="nav-link" data-tab="sessions">Sessions</button>
+    <span class="nav-spacer"></span>
+    <span class="nav-status"><span class="dot"></span><span id="pollinfo">syncing…</span></span>
+  </nav>
+
+  <header class="header">
+    <div>
+      <div class="breadcrumb">AI Monitor / Telemetry</div>
+      <h1 class="title"><b>Token</b> Observatory <span class="accent">◆</span></h1>
+      <p class="subtitle">Local token &amp; cost telemetry across Claude Code, Codex and OpenCode. Parsed from session logs — no proxy, no API keys.</p>
+    </div>
+    <div class="header-right">
+      <div style="text-align:right">
+        <div class="clock-label">Local Time</div>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+      <div class="ranges" id="ranges">
+        <button class="range" data-days="1">24H</button>
+        <button class="range" data-days="7">7D</button>
+        <button class="range" data-days="30">30D</button>
+        <button class="range active" data-days="">ALL</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="tab-dash">
+    <div class="grid g5">
+      <div class="stat hero feat"><div class="label">Total Cost</div><div class="value acc mono" id="k_cost">$0</div><div class="sub" id="k_cost_sub">all time</div></div>
+      <div class="stat hero"><div class="label">Total Tokens</div><div class="value mono" id="k_tok">0</div><div class="sub" id="k_tok_sub">in + out + cache</div></div>
+      <div class="stat hero"><div class="label">Requests</div><div class="value mono" id="k_req">0</div><div class="sub" id="k_req_sub">LLM calls</div></div>
+      <div class="stat hero"><div class="label">Cost Today</div><div class="value mono" id="k_today">$0</div><div class="sub" id="k_today_sub">vs 7d avg</div></div>
+      <div class="stat hero"><div class="label">Cache Hit Rate</div><div class="value mono" id="k_cache">0%</div><div class="sub">cache read share</div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="toggle" id="ts_toggle"><button class="active" data-v="cost">Cost</button><button data-v="tokens">Tokens</button></div>
+        <div class="section-title" id="ts_title">Cost Over Time</div>
+        <div class="chartbox"><canvas id="c_series"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">Cost by Tool</div>
+        <div class="chartbox sm"><canvas id="c_donut"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:1.5rem">
+      <div class="section-title">Tokens by Day · per tool</div>
+      <div class="chartbox"><canvas id="c_tokens"></canvas></div>
+    </div>
+
+    <h3 class="group-title">Cost Metrics</h3>
+    <div class="grid g4">
+      <div class="stat"><div class="label">Cost / 1M Tokens</div><div class="value mono" id="m_cpm">$0</div></div>
+      <div class="stat"><div class="label">Top Model Share</div><div class="value mono" id="m_share">0%</div><div class="sub" id="m_share_sub"></div></div>
+      <div class="stat"><div class="label">Today vs 7d Avg</div><div class="value mono" id="m_tva">0%</div></div>
+      <div class="stat"><div class="label">Monthly Forecast</div><div class="value mono" id="m_fc">$0</div><div class="sub">30d run-rate</div></div>
+    </div>
+
+    <h3 class="group-title">Throughput Metrics</h3>
+    <div class="grid g4">
+      <div class="stat"><div class="label">Tokens / Request</div><div class="value mono" id="m_tpr">0</div></div>
+      <div class="stat"><div class="label">Token Efficiency</div><div class="value mono" id="m_eff">0%</div><div class="sub">output / total</div></div>
+      <div class="stat"><div class="label">Reasoning Tokens</div><div class="value mono" id="m_reason">0</div></div>
+      <div class="stat"><div class="label">Model Diversity</div><div class="value mono" id="m_div">0</div><div class="sub">distinct models</div></div>
+    </div>
+
+    <h3 class="group-title">Sessions &amp; Streak</h3>
+    <div class="grid g4">
+      <div class="stat"><div class="label">Sessions / Day</div><div class="value mono" id="m_spd">0</div><div class="sub" id="m_spd_sub"></div></div>
+      <div class="stat"><div class="label">Current Streak</div><div class="value mono acc" id="m_streak">0d</div></div>
+      <div class="stat"><div class="label">Longest Streak</div><div class="value mono" id="m_lstreak">0d</div></div>
+      <div class="stat"><div class="label">Avg Session Cost</div><div class="value mono" id="m_asc">$0</div><div class="sub" id="m_asc_sub"></div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="section-title">Lines of Code by Language</div>
+        <div class="lang-grid">
+          <div class="lang-stat"><div class="v" style="color:var(--success)" id="loc_add">0</div><div class="l">lines added</div></div>
+          <div class="lang-stat"><div class="v" style="color:var(--danger)" id="loc_rem">0</div><div class="l">lines removed</div></div>
+          <div class="lang-stat"><div class="v acc" id="loc_net">0</div><div class="l">net lines</div></div>
+          <div class="lang-stat"><div class="v" id="loc_edits">0</div><div class="l">file edits</div></div>
+        </div>
+        <div class="bars" id="lang_bars"></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">Language Breakdown</div>
+        <div class="scroll"><table id="lang_table"><thead><tr><th>Ext</th><th class="num">+Added</th><th class="num">−Removed</th><th class="num">Edits</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:1.5rem">
+      <div class="section-title">Activity Heatmap · calls by weekday × hour (local)</div>
+      <div class="heat" id="heatmap"></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:1.5rem">
+      <div class="section-title">Model Cost Breakdown</div>
+      <div class="scroll"><table id="models"><thead><tr>
+        <th data-k="model">Model</th><th data-k="source">Tool</th>
+        <th class="num" data-k="calls">Calls</th><th class="num" data-k="tokens">Tokens</th><th class="num" data-k="cost">Cost</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="section-title">Tool Usage <span class="badge" id="tool_rate">0%</span></div>
+        <div class="bars" id="tool_bars"></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">Bash Commands by Category</div>
+        <div class="bars" id="bash_bars"></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:1.5rem">
+      <div class="section-title">Recent Activity</div>
+      <div class="scroll"><table id="recent"><thead><tr><th>Time</th><th>Tool</th><th>Model</th><th class="num">Tokens</th><th class="num">Cost</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE ============ -->
+  <section id="tab-live" class="hidden">
+    <div class="grid g4" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat hero feat"><div class="label">Requests · last hour</div><div class="value acc mono" id="lv_req">0</div></div>
+      <div class="stat hero"><div class="label">Cost · last hour</div><div class="value mono" id="lv_cost">$0</div></div>
+      <div class="stat hero"><div class="label">Tokens · last hour</div><div class="value mono" id="lv_tok">0</div></div>
+    </div>
+    <div class="panel">
+      <div class="section-title">Live Stream <span class="badge">auto · 5s</span></div>
+      <div class="scroll" style="max-height:600px"><table id="lv_stream"><thead><tr><th>Time</th><th>Tool</th><th>Model</th><th>Session</th><th class="num">In</th><th class="num">Out</th><th class="num">Cache</th><th class="num">Cost</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ SESSIONS ============ -->
+  <section id="tab-sessions" class="hidden">
+    <div class="panel">
+      <div class="section-title">Sessions <span class="badge" id="sess_count">0</span></div>
+      <div class="scroll" style="max-height:680px"><table id="sess_table"><thead><tr>
+        <th>Last Active</th><th>Tool</th><th>Model</th><th>Session</th>
+        <th class="num">Reqs</th><th class="num">Tools</th><th class="num">Tokens</th><th class="num">Cost</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <div class="foot" id="foot">—</div>
+</div>
+
+<script>
+const SRC = {claude_code:'#7c6cff', codex:'#f59e0b', opencode:'#38bdf8', gemini:'#ef4444'};
+const col = s => SRC[s] || '#8a7fb5';
+const fmtUsd = n => '$'+(+n||0).toLocaleString(undefined,{minimumFractionDigits:(n<100?2:0),maximumFractionDigits:(n<1?4:2)});
+const fmtN = n => (+n||0).toLocaleString();
+const fmtK = n => { n=+n||0; return n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':''+n; };
+const ago = t => { const s=Math.floor(Date.now()/1000)-t; if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'; };
+const hhmm = t => new Date(t*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const $ = id => document.getElementById(id);
+Chart.defaults.color='rgba(255,255,255,.42)'; Chart.defaults.borderColor='rgba(255,255,255,.05)';
+Chart.defaults.font.family="'DM Sans',sans-serif"; Chart.defaults.font.size=10;
+
+let DAYS='', last=null, sortKey='cost', sortDir=-1, tsMode='cost', charts={};
+function chart(id,cfg){ if(charts[id])charts[id].destroy(); charts[id]=new Chart($(id),cfg); }
+
+// clock
+setInterval(()=>{ $('clock').textContent=new Date().toLocaleTimeString(); },1000);
+
+// tabs
+document.querySelectorAll('.nav-link').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.nav-link').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  ['dash','live','sessions'].forEach(t=>$('tab-'+t).classList.toggle('hidden', t!==b.dataset.tab));
+  if(b.dataset.tab==='live') loadLive();
+  if(b.dataset.tab==='sessions') loadSessions();
+});
+// ranges
+document.querySelectorAll('.range').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.range').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  DAYS=b.dataset.days; loadStats();
+});
+// series toggle
+document.querySelectorAll('#ts_toggle button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#ts_toggle button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  tsMode=b.dataset.v; $('ts_title').textContent=(tsMode==='cost'?'Cost':'Tokens')+' Over Time'; if(last) renderSeries(last);
+});
+
+async function loadStats(){
+  const d = await (await fetch('/api/stats'+(DAYS?'?days='+DAYS:''))).json();
+  last=d; const t=d.totals;
+  $('k_cost').textContent=fmtUsd(t.cost); $('k_cost_sub').textContent=DAYS?('last '+DAYS+'d'):'all time';
+  $('k_tok').textContent=fmtK(t.tokens); $('k_tok_sub').textContent=fmtN(t.tokens)+' total';
+  $('k_req').textContent=fmtK(t.requests); $('k_req_sub').textContent=fmtN(t.requests)+' calls';
+  $('k_today').textContent=fmtUsd(t.today_cost);
+  const tv=t.today_vs_avg; $('k_today_sub').textContent=(tv>=0?'+':'')+tv+'% vs 7d avg';
+  $('k_today_sub').className='sub '+(tv>=0?'up':'down');
+  $('k_cache').textContent=(t.cache_hit_rate*100).toFixed(1)+'%';
+
+  $('m_cpm').textContent=fmtUsd(t.cost_per_mtok);
+  $('m_share').textContent=t.top_model_share+'%'; $('m_share_sub').textContent=d.by_model[0]?d.by_model[0].model:'';
+  $('m_tva').textContent=(tv>=0?'+':'')+tv+'%'; $('m_tva').className='value mono '+(tv>=0?'delta-up':'delta-down');
+  $('m_fc').textContent=fmtUsd(t.monthly_forecast);
+  $('m_tpr').textContent=fmtK(t.tokens_per_req);
+  $('m_eff').textContent=(t.token_efficiency*100).toFixed(1)+'%';
+  $('m_reason').textContent=fmtK(t.reasoning);
+  $('m_div').textContent=t.model_count;
+  $('m_spd').textContent=d.sessions.per_day; $('m_spd_sub').textContent=fmtN(d.sessions.count)+' sessions';
+  $('m_streak').textContent=d.streak.current+'d'; $('m_lstreak').textContent=d.streak.longest+'d';
+  $('m_asc').textContent=fmtUsd(d.sessions.avg_cost); $('m_asc_sub').textContent='~'+d.sessions.avg_turns+' turns avg';
+
+  // lines of code
+  $('loc_add').textContent=fmtN(d.file_totals.added); $('loc_rem').textContent=fmtN(d.file_totals.removed);
+  $('loc_net').textContent=fmtN(d.file_totals.net); $('loc_edits').textContent=fmtN(d.file_totals.edits);
+  const maxLang=Math.max(1,...d.file_types.map(f=>f.added+f.removed));
+  $('lang_bars').innerHTML=d.file_types.slice(0,8).map(f=>`<div class="bar-row">
+    <span class="bar-name">.${f.ext}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${(f.added+f.removed)/maxLang*100}%"></div></div>
+    <span class="bar-stat">+${fmtK(f.added)} −${fmtK(f.removed)}</span></div>`).join('');
+  $('lang_table').querySelector('tbody').innerHTML=d.file_types.map(f=>`<tr>
+    <td class="mono">.${f.ext}</td><td class="num" style="color:var(--success)">${fmtN(f.added)}</td>
+    <td class="num" style="color:var(--danger)">${fmtN(f.removed)}</td><td class="num">${fmtN(f.edits)}</td></tr>`).join('');
+
+  renderSeries(d); renderDonut(d); renderTokens(d); renderHeatmap(d.heatmap);
+  renderModels(d.by_model); renderTools(d); renderBash(d); renderRecent(d.recent);
+
+  if(d.poll) $('pollinfo').textContent='synced · +'+(d.poll.added||0)+' events';
+  $('foot').textContent='generated '+new Date(d.generated*1000).toLocaleString()+'  ·  '+fmtN(t.requests)+' calls  ·  '+d.velocity.requests_per_day+'/day  ·  peak '+d.peak.cost_day+' ('+fmtUsd(d.peak.cost_val)+')';
+}
+
+function renderSeries(d){
+  const labels=d.series.map(s=>s.date.slice(5));
+  const data=d.series.map(s=>Object.values(s[tsMode]).reduce((a,b)=>a+b,0));
+  chart('c_series',{type:'line',data:{labels,datasets:[{data,fill:true,tension:.35,borderColor:'#7c6cff',
+    backgroundColor:'rgba(124,108,255,.13)',pointRadius:0,borderWidth:2}]},
+    options:{plugins:{legend:{display:false}},maintainAspectRatio:false,
+      scales:{y:{ticks:{callback:v=>tsMode==='cost'?'$'+v:fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false}}}}});
+}
+function renderDonut(d){
+  const s=d.by_source;
+  chart('c_donut',{type:'doughnut',data:{labels:s.map(x=>x.source),datasets:[{data:s.map(x=>x.cost),
+    backgroundColor:s.map(x=>col(x.source)),borderColor:'#0f0f12',borderWidth:2}]},
+    options:{cutout:'64%',maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:9,padding:10,font:{size:10}}},
+      tooltip:{callbacks:{label:c=>c.label+': '+fmtUsd(c.parsed)}}}}});
+}
+function renderTokens(d){
+  const labels=d.series.map(s=>s.date.slice(5));
+  const srcs=d.by_source.map(x=>x.source);
+  chart('c_tokens',{type:'bar',data:{labels,datasets:srcs.map(src=>({label:src,
+    data:d.series.map(s=>s.tokens[src]||0),backgroundColor:col(src),stack:'t',borderWidth:0}))},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:9,padding:10}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>fmtK(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+function renderHeatmap(h){
+  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const max=Math.max(1,...h.flat());
+  let html='<div class="heat-hours">'+Array.from({length:24},(_,i)=>`<span>${i%3===0?i:''}</span>`).join('')+'</div>';
+  h.forEach((row,di)=>{
+    html+=`<div class="heat-row"><span class="heat-day">${DOW[di]}</span>`;
+    row.forEach((v,hi)=>{ const a=v/max; const bg=v?`rgba(124,108,255,${(0.12+a*0.88).toFixed(2)})`:'var(--bg-elevated)';
+      html+=`<div class="heat-cell" style="background:${bg}" title="${DOW[di]} ${hi}:00 · ${v} calls"></div>`; });
+    html+='</div>';
+  });
+  $('heatmap').innerHTML=html;
+}
+function renderModels(rows){
+  const r=[...rows].sort((a,b)=>{const x=a[sortKey],y=b[sortKey];return (x>y?1:x<y?-1:0)*sortDir;});
+  $('models').querySelector('tbody').innerHTML=r.map(m=>`<tr>
+    <td class="mono">${m.model}</td><td><span class="badge" style="border-color:${col(m.source)}">${m.source}</span></td>
+    <td class="num">${fmtN(m.calls)}</td><td class="num">${fmtK(m.tokens)}</td><td class="num">${fmtUsd(m.cost)}</td></tr>`).join('');
+}
+document.querySelectorAll('#models th').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; sortDir=(sortKey===k)?-sortDir:-1; sortKey=k; if(last)renderModels(last.by_model);
+});
+function renderTools(d){
+  $('tool_rate').textContent=d.tool_summary.success_rate+'% ok';
+  const max=Math.max(1,...d.tool_breakdown.map(t=>t.calls));
+  $('tool_bars').innerHTML=d.tool_breakdown.slice(0,12).map(t=>{
+    const fail=t.rate<90; return `<div class="bar-row"><span class="bar-name">${t.tool}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${t.calls/max*100}%;background:${fail?'var(--warning)':'var(--accent)'}"></div></div>
+    <span class="bar-stat">${fmtN(t.calls)} · ${t.rate}%</span></div>`; }).join('');
+}
+function renderBash(d){
+  const max=Math.max(1,...d.bash_breakdown.map(b=>b.calls));
+  $('bash_bars').innerHTML=d.bash_breakdown.map(b=>`<div class="bar-row">
+    <span class="bar-name">${b.cmd}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${b.calls/max*100}%;background:var(--accent-2)"></div></div>
+    <span class="bar-stat">${fmtN(b.calls)}</span></div>`).join('') || '<div style="color:var(--tt);font-size:.7rem">no bash data</div>';
+}
+function renderRecent(rows){
+  $('recent').querySelector('tbody').innerHTML=rows.map(r=>`<tr>
+    <td class="mono" style="color:var(--tt)">${ago(r.ts)} ago</td>
+    <td><span class="badge" style="border-color:${col(r.source)}">${r.source}</span></td>
+    <td class="mono">${r.model||'—'}</td><td class="num">${fmtK(r.tokens)}</td><td class="num">${fmtUsd(r.cost)}</td></tr>`).join('');
+}
+
+async function loadLive(){
+  const d=await (await fetch('/api/live')).json();
+  $('lv_req').textContent=fmtN(d.hour.requests); $('lv_cost').textContent=fmtUsd(d.hour.cost); $('lv_tok').textContent=fmtK(d.hour.tokens);
+  $('lv_stream').querySelector('tbody').innerHTML=d.recent.map(r=>`<tr>
+    <td class="mono" style="color:var(--tt)">${hhmm(r.ts)}</td>
+    <td><span class="badge" style="border-color:${col(r.source)}">${r.source}</span></td>
+    <td class="mono">${r.model||'—'}</td><td class="mono" style="color:var(--tt)">${(r.session_id||'').slice(0,8)}</td>
+    <td class="num">${fmtK(r.input)}</td><td class="num">${fmtK(r.output)}</td><td class="num">${fmtK(r.cache_read)}</td>
+    <td class="num">${fmtUsd(r.cost)}</td></tr>`).join('');
+}
+async function loadSessions(){
+  const d=await (await fetch('/api/sessions')).json();
+  $('sess_count').textContent=d.sessions.length;
+  $('sess_table').querySelector('tbody').innerHTML=d.sessions.map(s=>`<tr>
+    <td class="mono" style="color:var(--tt)">${ago(s.last)} ago</td>
+    <td><span class="badge" style="border-color:${col(s.source)}">${s.source}</span></td>
+    <td class="mono">${s.model||'—'}</td><td class="mono" style="color:var(--tt)">${(s.session_id||'').slice(0,10)}</td>
+    <td class="num">${fmtN(s.requests)}</td><td class="num">${fmtN(s.tool_calls)}</td>
+    <td class="num">${fmtK(s.tokens)}</td><td class="num">${fmtUsd(s.cost)}</td></tr>`).join('');
+}
+
+loadStats();
+setInterval(()=>{ if(!$('tab-dash').classList.contains('hidden')) loadStats();
+  else if(!$('tab-live').classList.contains('hidden')) loadLive(); }, 30000);
+setInterval(()=>{ if(!$('tab-live').classList.contains('hidden')) loadLive(); }, 5000);
+</script>
+</body>
+</html>
