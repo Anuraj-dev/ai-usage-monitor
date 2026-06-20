@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/ai-usage-monitor
-ExecStart=%h/ai-usage-monitor/.venv/bin/python -m monitor.server
+WorkingDirectory=%h/Anuraj-Dev/ai-usage-monitor
+ExecStart=%h/Anuraj-Dev/ai-usage-monitor/.venv/bin/python -m monitor.server
 Restart=on-failure
 RestartSec=5
 

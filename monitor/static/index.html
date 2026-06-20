@@ -92,6 +92,14 @@ td{color:var(--ts)}
 td.num,th.num{text-align:right;font-family:var(--mono)}
 tbody tr:hover{background:var(--bg-hover)}
 .scroll{max-height:340px;overflow:auto}
+
+/* scrollbars — match the dark theme */
+*{scrollbar-width:thin;scrollbar-color:#2c2c38 var(--bg-elevated)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg-elevated)}
+::-webkit-scrollbar-thumb{background:#2c2c38;border:2px solid var(--bg-card);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent-dim)}
+::-webkit-scrollbar-corner{background:var(--bg-elevated)}
 .badge{display:inline-block;border:1px solid var(--accent-dim);color:var(--ts);padding:.05rem .4rem;
   font-size:.6rem;text-transform:uppercase;font-family:var(--mono);letter-spacing:.04em}
 

@@ -9,8 +9,9 @@ CLAUDE_PROJECTS = HOME / ".claude" / "projects"
 CODEX_SESSIONS = HOME / ".codex" / "sessions"
 OPENCODE_DB = HOME / ".local" / "share" / "opencode" / "opencode.db"
 
-# Where we store our own data
-APP_DIR = HOME / "ai-usage-monitor"
+# Where we store our own data — derived from the package location so the
+# project can live anywhere (DB always sits next to the code).
+APP_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = Path(os.environ.get("AIUM_DB", APP_DIR / "usage.db"))
 
 # Obsidian vault daily summary
