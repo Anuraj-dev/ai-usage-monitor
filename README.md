@@ -162,3 +162,7 @@ The dashboard loads Chart.js from jsDelivr and fonts from Google Fonts, so the p
 ## Acknowledgements
 
 The dashboard design is adapted from [agentObservatory](https://github.com/Snehit70/agentObservatory).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
